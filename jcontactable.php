@@ -6,18 +6,19 @@ Author: Jacer Omri
 Version: 1.0
 Author URI: http://jacer.info
 */
+add_action('wp_print_scripts', 'jc_loadit');
 
 $jc_settings = array(
-	  'name' => 'Name Label'
-	, 'email' => 'Email Label'
-	, 'dropdownTitle' => 'Dropdown Title'
-	, 'dropdownOptions' => 'Dropdown Options'
-	, 'message' => 'Message Label'
+	  'jc_name' => 'Name Label'
+	, 'jc_email' => 'Email Label'
+	, 'jc_dropdownTitle' => 'Dropdown Title'
+	, 'jc_dropdownOptions' => 'Dropdown Options'
+	, 'jc_message' => 'Message Label'
 	, 'jc_submit' => 'Submit Label'
-	, 'recievedMsg' => 'Received Message'
-	, 'notRecievedMsg' => 'Not Received Message'
-	, 'disclaimer' => 'disclaimer'
-	, 'hideOnSubmit' => 'Hide on Submit'
+	, 'jc_recievedMsg' => 'Received Message'
+	, 'jc_notRecievedMsg' => 'Not Received Message'
+	, 'jc_disclaimer' => 'disclaimer'
+	, 'jc_hideOnSubmit' => 'Hide on Submit'
 );
 
 // create custom plugin settings menu
@@ -35,7 +36,7 @@ function register_jcontactable() {
 	add_settings_section('jcontactable-settings', 'Labels Options', 'jcontactable_settings_code', __FILE__);
 	foreach($jc_settings as $setting => $name){
 		register_setting( 'jcontactable-settings-group', $setting );
-		if($setting == 'hideOnSubmit')
+		if($setting == 'jc_hideOnSubmit')
 			add_settings_field($setting, $name, 'jcontactable_checkbox_code',  __FILE__, 'jcontactable-settings', array($setting));
 		else
 			add_settings_field($setting, $name, 'jcontactable_text_code',  __FILE__, 'jcontactable-labels', array($setting));
@@ -57,20 +58,20 @@ function jcontactable_checkbox_code(array $args) {
 	echo '<input id="'.$args[0].'" name="'.$args[0].'" type="checkbox"  ' . checked( get_option($args[0]), 1, false ) . ' value="1" /><br />';
 }
 
-register_activation_hook( __FILE__, 'set_up_options' );
+register_activation_hook( __FILE__, 'jc_set_up_options' );
 
-function set_up_options(){
+function jc_set_up_options(){
 	$jc_settings_def = array(
-		  'name' => 'Name'
-		, 'email' => 'Email'
-		, 'dropdownTitle' => 'Issue'
-		, 'dropdownOptions' => 	'General, Website bug, Feature request'
-		, 'message' => 'Message'
+		  'jc_name' => 'Name'
+		, 'jc_email' => 'Email'
+		, 'jc_dropdownTitle' => 'Issue'
+		, 'jc_dropdownOptions' => 	'General, Website bug, Feature request'
+		, 'jc_message' => 'Message'
 		, 'jc_submit' => 'Send'
-		, 'recievedMsg' => 'Thank you for your message'
-		, 'notRecievedMsg' => 'Sorry but your message could not be sent, try again later'
-		, 'disclaimer' => 'Please feel free to get in touch, we value your feedback'
-		, 'hideOnSubmit' => '1'
+		, 'jc_recievedMsg' => 'Thank you for your message'
+		, 'jc_notRecievedMsg' => 'Sorry but your message could not be sent, try again later'
+		, 'jc_disclaimer' => 'Please feel free to get in touch, we value your feedback'
+		, 'jc_hideOnSubmit' => '1'
 	);
 	foreach($jc_settings_def as $setting => $value)
 		add_option($setting, $value);
@@ -88,29 +89,34 @@ function jcontactable_settings_page() { ?>
 	</div><?php 
 }
 
-if(!( is_admin() && ( !defined( 'DOING_AJAX' ) || !DOING_AJAX ) )){
-wp_enqueue_script( 'jcontactable.js', plugins_url( 'jquery.contactable.min.js' , __FILE__ ), array('jquery'));
-wp_enqueue_script( 'contactable.js', plugins_url( 'contactable.js' , __FILE__ ), array('jquery', 'jcontactable.js'));
-wp_enqueue_style( 'contactable.css', plugins_url( 'contactable.css' , __FILE__ ), array()); ?>
+function jc_loadit(){
+	wp_enqueue_style( 'contactable.css', plugins_url( 'contactable.css' , __FILE__ ), array());
+	wp_enqueue_script( 'jcontactable.js', plugins_url( 'jquery.contactable.min.js' , __FILE__ ), array('jquery'));
+	//wp_enqueue_script( 'contactable.js', plugins_url( 'contactable.js' , __FILE__ ), array('jquery', 'jcontactable.js'));
+	add_action( 'wp_footer', function() {?>
+	<!--start jcontactable -->
+	<div id="jcontactable"><!-- jcontactable html placeholder --></div>
+	<!--end jcontactable -->
 	<script type="text/javascript">
 	//<![CDATA[
 	var jc = {
 		subject: 'feedback URL:'+location.href,
 		url: '<?php echo plugins_url( 'mail.php' , __FILE__ ); ?>',
-		name: '<?php echo addslashes(get_option('name')); ?>',
-		email: '<?php echo addslashes(get_option('email')); ?>',
-		dropdownTitle: '<?php echo addslashes(get_option('dropdownTitle')); ?>',
-		dropdownOptions: ['<?php echo implode("', '", explode(',', get_option('dropdownOptions'))) ?>'],
-		message : '<?php echo addslashes(get_option('message')); ?>',
+		name: '<?php echo addslashes(get_option('jc_name')); ?>',
+		email: '<?php echo addslashes(get_option('jc_email')); ?>',
+		dropdownTitle: '<?php echo addslashes(get_option('jc_dropdownTitle')); ?>',
+		dropdownOptions: ['<?php echo implode("', '", explode(',', get_option('jc_dropdownOptions'))) ?>'],
+		message : '<?php echo addslashes(get_option('jc_message')); ?>',
 		submit : '<?php echo addslashes(get_option('jc_submit')); ?>',
-		recievedMsg : '<?php echo addslashes(get_option('recievedMsg')); ?>',
-		notRecievedMsg : '<?php echo addslashes(get_option('notRecievedMsg')); ?>',
-		disclaimer: '<?php echo addslashes(get_option('disclaimer')); ?>',
-		hideOnSubmit: <?php echo get_option('hideOnSubmit') ? 'true' : 'false'; ?>
+		recievedMsg : '<?php echo addslashes(get_option('jc_recievedMsg')); ?>',
+		notRecievedMsg : '<?php echo addslashes(get_option('jc_notRecievedMsg')); ?>',
+		disclaimer: '<?php echo addslashes(get_option('jc_disclaimer')); ?>',
+		hideOnSubmit: <?php echo get_option('jc_hideOnSubmit') ? 'true' : 'false'; ?>
 	}
+	jQuery(function(){
+		jQuery('#jcontactable').contactable(jc);
+	});
 	//]]>
 	</script>
-	<!--start jcontactable -->
-	<div id="jcontactable"><!-- jcontactable html placeholder --></div>
-	<!--end jcontactable --><?php
+<?php });
 }
